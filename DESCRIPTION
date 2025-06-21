@@ -1,6 +1,6 @@
 Package: vmsae
 Title: Variational Multivariate Spatial Small Area Estimation
-Version: 0.1.0
+Version: 0.1.1
 Maintainer: Zhenhua Wang <zhenhua.wang@missouri.edu>
 Authors@R: c(
     person("Zhenhua", "Wang", email = "zhenhua.wang@missouri.edu", role = c("aut", "cre")),
@@ -16,9 +16,9 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 RoxygenNote: 7.3.2
 NeedsCompilation: no
-Packaged: 2025-05-07 18:40:22 UTC; zhenhua
+Packaged: 2025-06-21 00:48:10 UTC; zhenhua
 Author: Zhenhua Wang [aut, cre],
   Paul A. Parker [aut, res],
   Scott H. Holan [aut, res]
 Repository: CRAN
-Date/Publication: 2025-05-09 10:30:02 UTC
+Date/Publication: 2025-06-21 02:30:02 UTC

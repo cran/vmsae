@@ -13,7 +13,9 @@ vgmsfh_numpyro(
   model_name,
   save_dir = NULL,
   num_warmup = 1000,
-  num_samples = 1000
+  num_samples = 1000,
+  verbose = TRUE,
+  use_gpu = FALSE
 )
 }
 \arguments{
@@ -34,15 +36,19 @@ vgmsfh_numpyro(
 \item{num_warmup}{Integer. Number of warmup (burn-in) iterations. Default is 1000.}
 
 \item{num_samples}{Integer. Number of posterior samples to draw. Default is 1000.}
+
+\item{verbose}{Logical; if \code{TRUE} (default), prints progress.}
+
+\item{use_gpu}{Boolean. Use GPU if available. GPU support is recommended only for high-dimensional datasets (e.g., those with more than 1,000 areas). Default is \code{FALSE}.}
 }
 \value{
 An object of class \code{VGMSFH}, which contains:
 \itemize{
 \item \code{direct_estimate}: the observed response data,
 \item \code{yhat_samples}: posterior samples of the latent population process,
-\item \code{spatial_samples}: posterior samples of spatial random effects (CAR),
+\item \code{phi_samples}: posterior samples of spatial random effects (CAR),
 \item \code{beta_samples}: posterior samples of fixed effect coefficients,
-\item \code{all_samples}: a list containing all sampled parameters, including \code{mu}, \code{delta}, and other intermediate quantities.
+\item \code{other_samples}: a list containing all sampled parameters, including \code{mu}, \code{delta}, and other intermediate quantities.
 }
 }
 \description{

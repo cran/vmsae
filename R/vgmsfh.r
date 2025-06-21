@@ -5,9 +5,9 @@
 #' @slot model_name Character. The name of the trained VAE model.
 #' @slot direct_estimate Array. Direct estimates of parameters.
 #' @slot yhat_samples Array. Posterior samples of the estimated parameters.
-#' @slot spatial_samples Array. Posterior samples of the estimated spatial random effects.
+#' @slot phi_samples Array. Posterior samples of the estimated spatial random effects.
 #' @slot beta_samples Array. Posterior samples of the fixed effect coefficients.
-#' @slot all_samples List. Posterior samples of all parameters in the VGMSFH model.
+#' @slot other_samples List. List of posterior samples of other parameters in the VGMSFH model.
 #'
 #' @export
 setClass("VGMSFH",
@@ -15,9 +15,9 @@ setClass("VGMSFH",
     model_name = "character",
     direct_estimate = "array",
     yhat_samples = "array",
-    spatial_samples = "array",
+    phi_samples = "array",
     beta_samples = "array",
-    all_samples = "list"
+    other_samples = "list"
   )
 )
 
@@ -34,14 +34,16 @@ setClass("VGMSFH",
 #' @param save_dir Character. The directory where the VAE model is stored. If \code{NULL}, a default pretrained model directory is used.
 #' @param num_samples Integer. Number of posterior samples to draw. Default is 1000.
 #' @param num_warmup Integer. Number of warmup (burn-in) iterations. Default is 1000.
+#' @param verbose Logical; if \code{TRUE} (default), prints progress.
+#' @param use_gpu Boolean. Use GPU if available. GPU support is recommended only for high-dimensional datasets (e.g., those with more than 1,000 areas). Default is `FALSE`.
 #'
 #' @return An object of class \code{VGMSFH}, which contains:
 #' \itemize{
 #'   \item \code{direct_estimate}: the observed response data,
 #'   \item \code{yhat_samples}: posterior samples of the latent population process,
-#'   \item \code{spatial_samples}: posterior samples of spatial random effects (CAR),
+#'   \item \code{phi_samples}: posterior samples of spatial random effects (CAR),
 #'   \item \code{beta_samples}: posterior samples of fixed effect coefficients,
-#'   \item \code{all_samples}: a list containing all sampled parameters, including \code{mu}, \code{delta}, and other intermediate quantities.
+#'   \item \code{other_samples}: a list containing all sampled parameters, including \code{mu}, \code{delta}, and other intermediate quantities.
 #' }
 #'
 #' @details
@@ -83,7 +85,8 @@ setClass("VGMSFH",
 #' @export
 vgmsfh_numpyro <- function(y, y_sigma, X, W, GEOID,
                            model_name, save_dir = NULL,
-                           num_warmup = 1000, num_samples = 1000) {
+                           num_warmup = 1000, num_samples = 1000,
+                           verbose = TRUE, use_gpu = FALSE) {
   vae_weights <- load_vae(model_name, save_dir)
   W_in <- vae_weights@W_in
   B_in <- vae_weights@B_in
@@ -97,16 +100,17 @@ vgmsfh_numpyro <- function(y, y_sigma, X, W, GEOID,
   }
   p_y <- dim(y)[2]
   data <- sort_data(y, y_sigma, X, W, GEOID, GEOID_vae)
-  samples <- py$run_vgmcar(
+  samples <- py$run_vgmsfh(
     p_y, data$y, data$y_sigma, data$X, data$W, W_in, B_in, W_out, B_out,
-    num_samples, num_warmup)
+    num_samples, num_warmup, verbose, use_gpu)
+  other_samples <- samples[!(names(samples) %in% c("y_hat", "phi", "beta"))]
   vgmsfh <- new("VGMSFH",
     model_name = model_name,
     direct_estimate = y,
     yhat_samples = samples$y_hat,
-    spatial_samples = samples$car,
+    phi_samples = samples$phi,
     beta_samples = samples$beta,
-    all_samples = samples)
+    other_samples = other_samples)
   return(vgmsfh)
 }
 

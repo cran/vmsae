@@ -4,6 +4,8 @@
 #'
 #' @param envname Character. The name of the Python environment to create or update.
 #'        Default is `"vmsae"`.
+#' @param use_gpu Boolean. An indicator for whether to install packages with GPU support.
+#'        Default is `FALSE`.
 #'
 #' @return No return value, called for side effects
 #'
@@ -22,10 +24,19 @@
 #' @importFrom reticulate py_install
 #'
 #' @export
-install_environment <- function(envname = "vmsae") {
+install_environment <- function(envname = "vmsae", use_gpu = FALSE) {
   install_python()
-  py_install("torch", envname = envname)
-  py_install("numpyro", envname = envname)
+  if (use_gpu) {
+    py_install(
+      packages = c("torch", "numpyro[cuda]"),
+      pip = TRUE,
+      extra_args = c("-f",
+        "https://storage.googleapis.com/jax-releases/jax_cuda_releases.html"),
+      envname = envname
+    )
+  } else {
+    py_install(c("torch", "numpyro"), envname = envname)
+  }
 }
 
 #' Load Python Environment and Source Model Modules
@@ -35,6 +46,8 @@ install_environment <- function(envname = "vmsae") {
 #'
 #' @param envname Character. The name of the Python environment to create or update.
 #'        Default is `"vmsae"`.
+#' @param is_conda Boolean. The indicator for whether the loaded environment is a conda environment.
+#'        Default is `"FALSE"`.
 #'
 #' @details
 #' The function loads four Python scripts located in the package's `py/` directory:
@@ -61,21 +74,28 @@ install_environment <- function(envname = "vmsae") {
 #' # this function is time consuming for the first run
 #' install_environment("custom")
 #' load_environment("custom") # Load custom virtual environment
+#'
+#' load_environment("custom", is_conda = TRUE) # Load custom conda environment
 #' }
 #'
+#' @importFrom reticulate use_condaenv
 #' @importFrom reticulate use_virtualenv
 #' @importFrom reticulate py_config
 #' @importFrom reticulate source_python
 #'
 #' @export
-load_environment <- function(envname = "vmsae") {
-  vgmcar_module <- system.file("py", "vgmcar.py", package = "vmsae")
+load_environment <- function(envname = "vmsae", is_conda = FALSE) {
+  vgmsfh_module <- system.file("py", "vgmsfh.py", package = "vmsae")
   vae_module <- system.file("py", "vae.py", package = "vmsae")
   train_vae_module <- system.file("py", "train_vae.py", package = "vmsae")
   car_dataset_module <- system.file("py", "car_dataset.py", package = "vmsae")
-  use_virtualenv(envname, required = TRUE)
+  if (is_conda) {
+    use_condaenv(envname, required = TRUE)
+  } else {
+    use_virtualenv(envname, required = TRUE)
+  }
   py_config()
-  source_python(vgmcar_module)
+  source_python(vgmsfh_module)
   source_python(vae_module)
   source_python(train_vae_module)
   source_python(car_dataset_module)
